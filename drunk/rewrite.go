@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -22,7 +23,6 @@ func errorPrint(msg string, exitCode int) {
 
 }
 func main() {
-	errorPrint("test", 1)
 	if _, err := os.Stat("/etc/gpac.gconf"); os.IsNotExist(err) {
 		errorPrint("Error: /etc/gpac.gconf not found", 127)
 	}
@@ -53,7 +53,28 @@ func gconf(gconfs string, keyword string) string {
 
 // build function
 func build(pkg string) {
-	print(pkg)
+	// get repo
+	data, err := ioutil.ReadFile("/etc/gpac.gconf")
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return
+	}
+	var gpacGConfText string = string(data)
+	repo := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "repoPath") != "" {
+			repo = gconf(string(line), "repoPath")
+		}
+	}
+	repoUrl := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "repo") != "" {
+			repoUrl = gconf(string(line), "repoUrl")
+		}
+	}
+	fmt.Println(repoUrl)
+	fmt.Println(repo)
+	fmt.Println(pkg)
 }
 
 // check if arguments are given
@@ -72,7 +93,7 @@ func isRoot() bool {
 
 // help
 func help() {
-	fmt.Println("real programmers dont need help")
+	fmt.Println("real programmers don't need help")
 
 }
 func arguments() {

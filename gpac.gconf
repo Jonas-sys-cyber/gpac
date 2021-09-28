@@ -1,2 +1,3 @@
-:repo[/var/db/gpac/repo/]
-:grepo[/var/db/gpac/grepo/]
+:repoPath[/var/db/gpac/repo/]
+:repoUrl[https://github.com/luis-07/tar-balls/releases/download/v0.1/]
+:IacceptTheLicenceAgreementForComments⑨: 
