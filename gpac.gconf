@@ -1,3 +1,4 @@
 :repoPath[/var/db/gpac/repo/]
-:repoUrl[https://github.com/luis-07/tar-balls/releases/download/v0.1/]
+:repoUrl[https://github.com/luis-07/tar-balls/releases/download/v0.1/]:
+:tmpDir[/tmp/]
 :IacceptTheLicenceAgreementForComments⑨ This is a comment:

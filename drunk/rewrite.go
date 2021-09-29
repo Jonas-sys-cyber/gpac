@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/user"
 	"strings"
@@ -51,6 +53,27 @@ func gconf(gconfs string, keyword string) string {
 
 }
 
+func download(filepath string, url string) error {
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
 // build function
 func build(pkg string) {
 	// get repo
@@ -72,7 +95,22 @@ func build(pkg string) {
 			repoUrl = gconf(string(line), "repoUrl")
 		}
 	}
-	pkgUrl := repoUrl + pkg + "tar.gz"
+	tmpDir := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "tmpDir") != "" {
+			tmpDir = gconf(string(line), "tmpDir") + pkg + "/"
+		}
+	}
+	// create tmp dir
+	os.MkdirAll(tmpDir, os.ModePerm)
+	// get gconf file
+	fmt.Println(tmpDir + pkg + ".tar.gz")
+	pkgUrl := repoUrl + pkg + ".tar.gz"
+	err = download(tmpDir+pkg+".tar.gz", pkgUrl)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Downloaded tar ball from: " + pkgUrl)
 	fmt.Println(pkgUrl)
 	fmt.Println(repoUrl)
 	fmt.Println(repo)
