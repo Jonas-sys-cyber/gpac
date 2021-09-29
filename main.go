@@ -48,7 +48,7 @@ func addToList(pkg, list string) {
 		log.Fatal(err)
 	}
 }
-func gconf(gconfs string, keyword string) string {
+func gconf(gconfs, keyword string) string {
 
 	for _, line := range strings.Split(strings.TrimRight(gconfs, "\n"), "\n") {
 
@@ -100,6 +100,27 @@ func build(pkg string) {
 			repo = gconf(string(line), "repoPath")
 		}
 	}
+
+	repoUrl := ""
+	if strings.Contains(pkg, "/") {
+
+		trimmed := strings.Split(pkg, "/")
+		fmt.Println(trimmed[0])
+		for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+			if gconf(string(line), trimmed[0]) != "" {
+				repoUrl = gconf(string(line), trimmed[0])
+			}
+		}
+	} else {
+
+		for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+			if gconf(string(line), "repoUrl") != "" {
+				repoUrl = gconf(string(line), "repoUrl")
+			}
+		}
+		fmt.Println("using reop:" + repoUrl)
+	}
+
 	pkgList := ""
 	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
 		if gconf(string(line), "pkgList") != "" {
@@ -107,12 +128,7 @@ func build(pkg string) {
 		}
 	}
 	addToList(pkg, pkgList)
-	repoUrl := ""
-	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
-		if gconf(string(line), "repo") != "" {
-			repoUrl = gconf(string(line), "repoUrl")
-		}
-	}
+
 	tmpDir := ""
 	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
 		if gconf(string(line), "tmpDir") != "" {
