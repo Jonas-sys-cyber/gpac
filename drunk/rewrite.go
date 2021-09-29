@@ -26,7 +26,7 @@ func errorPrint(msg string, exitCode int) {
 }
 func main() {
 	if _, err := os.Stat("/etc/gpac.gconf"); os.IsNotExist(err) {
-		errorPrint("Error: /etc/gpac.gconf not found", 127)
+		errorPrint("Error: /etc/gpac.gconf not found. Just install the shit right, man!", 127)
 	}
 	if checkargs() {
 		arguments()
@@ -79,7 +79,7 @@ func build(pkg string) {
 	// get repo
 	data, err := ioutil.ReadFile("/etc/gpac.gconf")
 	if err != nil {
-		fmt.Println("File reading error", err)
+		fmt.Println("File reading error. Please don´t try it again", err)
 		return
 	}
 	var gpacGConfText string = string(data)
@@ -133,7 +133,7 @@ func isRoot() bool {
 
 // help
 func help() {
-	fmt.Println("real programmers don't need help")
+	fmt.Println("Real programmers don´t need help!")
 
 }
 func arguments() {
