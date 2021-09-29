@@ -1,23 +1,53 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
 	"strings"
 )
 
-// clors
 const (
-	InfoColor   = "\033[1;34m"
-	SucessColor = "\033[32m"
-	ErrorColor  = "\033[1;31m"
-	ColorReset  = "\033[0m"
+	InfoColor    = "\033[1;34m"
+	SuccessColor = "\033[32m"
+	ErrorColor   = "\033[1;31m"
+	ColorReset   = "\033[0m"
 )
 
+// error messages
+func errorPrint(msg string, exitCode int) {
+	fmt.Println(ErrorColor, msg, ColorReset)
+	os.Exit(exitCode)
+
+}
+func main() {
+	if _, err := os.Stat("/etc/gpac.gconf"); os.IsNotExist(err) {
+		errorPrint("Error: /etc/gpac.gconf not found. Just install the shit right, man!", 127)
+	}
+	if checkargs() {
+		arguments()
+	} else {
+		help()
+	}
+
+	os.Exit(0)
+}
+
+func addToList(pkg, list string) {
+	file, err := os.OpenFile(list, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	if _, err := file.WriteString(pkg + "\n"); err != nil {
+		log.Fatal(err)
+	}
+}
 func gconf(gconfs string, keyword string) string {
 
 	for _, line := range strings.Split(strings.TrimRight(gconfs, "\n"), "\n") {
@@ -34,18 +64,111 @@ func gconf(gconfs string, keyword string) string {
 
 }
 
-func main() {
-	if _, err := os.Stat("/etc/gpac.gconf"); os.IsNotExist(err) {
-		fmt.Println(ErrorColor + "Error: /etc/gpac.gconf not found" + SucessColor)
-		os.Exit(1)
+func download(filepath string, url string) error {
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
 	}
-	if checkargs() {
-		arguments()
-	} else {
-		help()
+	defer resp.Body.Close()
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
+// build function
+func build(pkg string) {
+	// get repo
+	data, err := ioutil.ReadFile("/etc/gpac.gconf")
+	if err != nil {
+		fmt.Println("File reading error. Please don´t try it again", err)
+		return
+	}
+	var gpacGConfText string = string(data)
+	repo := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "repoPath") != "" {
+			repo = gconf(string(line), "repoPath")
+		}
+	}
+	pkgList := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "pkgList") != "" {
+			pkgList = gconf(string(line), "pkgList")
+		}
+	}
+	addToList(pkg, pkgList)
+	repoUrl := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "repo") != "" {
+			repoUrl = gconf(string(line), "repoUrl")
+		}
+	}
+	tmpDir := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "tmpDir") != "" {
+			tmpDir = gconf(string(line), "tmpDir") + pkg + "/"
+		}
+	}
+	// create tmp dir
+	os.MkdirAll(tmpDir, os.ModePerm)
+	// get gconf file for the build script
+	gconfFile := repo + pkg + ".gconf"
+	// fmt.Println(gconfFile)
+	data, err = ioutil.ReadFile(gconfFile)
+	if err != nil {
+		fmt.Println("File reading error. Please don´t try it again", err)
+		return
+	}
+	buildCommand := ""
+	var gconfText string = string(data)
+	for _, line := range strings.Split(strings.TrimRight(gconfText, "\n"), "\n") {
+		if gconf(string(line), "build") != "" {
+			buildCommand = gconf(string(line), "build")
+		}
+	}
+	// write the build script
+	f, err := os.Create(tmpDir + "build")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	//fmt.Println(buildCommand)
+	_, err2 := f.WriteString(buildCommand)
+	if err2 != nil {
+		log.Fatal(err2)
 	}
 
-	os.Exit(0)
+	// fmt.Println("done")
+	// fmt.Println(gconfFile)
+	// fmt.Println(tmpDir + pkg + ".tar.gz")
+	pkgUrl := repoUrl + pkg + ".tar.gz"
+	err = download(tmpDir+pkg+".tar.gz", pkgUrl)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Println("Downloaded tar ball from: " + pkgUrl)
+	//fmt.Println(pkgUrl)
+	//fmt.Println(repoUrl)
+	//fmt.Println(repo)
+	//fmt.Println(pkg)
+	//fmt.Println(tmpDir + "build")
+	cmd := exec.Command("sh", tmpDir+"build")
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print("package installed")
+
 }
 
 // check if arguments are given
@@ -53,7 +176,7 @@ func checkargs() bool {
 	return len(os.Args) > 1
 }
 
-// root-check func
+// root check
 func isRoot() bool {
 	currentUser, err := user.Current()
 	if err != nil {
@@ -62,230 +185,10 @@ func isRoot() bool {
 	return currentUser.Username == "root"
 }
 
-func build(pkg string) {
-	// root-check
-	if !isRoot() {
-		fmt.Println(ErrorColor+"Hey bitch! Run me as root!", ColorReset)
-		os.Exit(127)
-	}
-
-	fmt.Println(InfoColor + "installing package: " + pkg)
-
-	file, err := os.Open("/etc/gpac.gconf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-
-	}()
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() { // internally, it advances token based on sperator
-		if gconf(scanner.Text(), "repo") != "" {
-			var repo string = gconf(scanner.Text(), "repo")
-
-			var package_location string = repo + pkg
-
-			fmt.Println(SucessColor, "✅", ColorReset, " Using repo at: "+repo)
-			if _, err := os.Stat(package_location); os.IsNotExist(err) {
-				fmt.Println(ErrorColor, "❌ Package "+pkg+" not found. Don't try it again!", ColorReset)
-				os.Exit(1)
-			}
-			if _, err := os.Stat(package_location); !os.IsNotExist(err) {
-				fmt.Println(SucessColor, "✅", ColorReset, " Package "+pkg+" found. But EGAL!")
-			}
-		}
-	}
-
-	var tmpdir string = "/tmp/"
-	tmpdir = tmpdir + pkg
-	fmt.Println(SucessColor, "✅ ", ColorReset, "Creating tmpdir: "+tmpdir)
-
-	if tmpdir != "/" && strings.Contains(tmpdir, "/tmp") {
-		tcmd2 := exec.Command("rm", "-rf", tmpdir)
-		tcmd2.Stdout = os.Stdout
-		tcmd2.Stderr = os.Stderr
-		if err := tcmd2.Run(); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	// tmp-cmd
-	tcmd := exec.Command("mkdir", tmpdir)
-	tcmd.Stdout = os.Stdout
-	tcmd.Stderr = os.Stderr
-	if err := tcmd.Run(); err != nil {
-		log.Fatal(err)
-	}
-
-	// get repo path
-	file, err = os.Open("/etc/gpac.gconf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err = file.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	scanner = bufio.NewScanner(file)
-
-	for scanner.Scan() { // internally, it advances token based on sperator
-		if gconf(scanner.Text(), "repo") != "" {
-			bcmd := exec.Command("cp", "-r", gconf(scanner.Text(), "repo")+pkg+"/"+"build", tmpdir)
-			bcmd.Stdout = os.Stdout
-			bcmd.Stderr = os.Stderr
-			if err := bcmd.Run(); err != nil {
-				log.Fatal(err)
-			}
-
-			file, err := os.Open(gconf(scanner.Text(), "repo") + pkg + "/" + "url")
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			defer func() {
-				if err = file.Close(); err != nil {
-					log.Fatal(err)
-				}
-			}()
-
-			scanner := bufio.NewScanner(file)
-
-			for scanner.Scan() { // internally, it advances token based on sperator
-
-				fmt.Println(scanner.Text())
-				var url string = scanner.Text()
-				// "curl",  url, ">",tmpdir + "/", os.Args[2]
-				f, err := os.Create("/tmp/clurl.sh")
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-
-				l, err := f.WriteString("curl " + "-LG " + url + " > " + tmpdir + "/" + pkg + ".tar.gz")
-				if err != nil {
-
-					f.Close()
-					return
-				}
-				l = l
-				err = f.Close()
-				if err != nil {
-
-					return
-				}
-				ccmd := exec.Command("sh", "/tmp/clurl.sh")
-				ccmd.Stdout = os.Stdout
-				ccmd.Stderr = os.Stderr
-				if err := ccmd.Run(); err != nil {
-					log.Fatal(err)
-				}
-			}
-		}
-	}
-
-	// build-cmd
-
-	bcmd2 := exec.Command("sh", tmpdir+"/"+"build")
-	bcmd2.Stdout = os.Stdout
-	bcmd2.Stderr = os.Stderr
-	if err := bcmd2.Run(); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(SucessColor, "✅ ", "Package "+pkg+" installed. So fuck off and have fun with your new bloat.", ColorReset)
-}
-
+// help
 func help() {
-	fmt.Println("+-----------+\n" +
-		"| gpac help |\n" +
-		"+-----------+\n" +
-		"Install: gpac b packagename")
-	os.Exit(0)
+	fmt.Println("Real programmers don´t need help!")
 }
-func create(pkgname string) {
-	file1, err := os.Open("/etc/gpac.gconf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err = file1.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	scanner1 := bufio.NewScanner(file1)
-	gconf_file := ""
-	rdir := ""
-	for scanner1.Scan() {
-		if gconf(scanner1.Text(), "grepo") != "" {
-			gconf_file = gconf(scanner1.Text(), "grepo") + pkgname + ".gconf"
-		}
-		if gconf(scanner1.Text(), "repo") != "" {
-			rdir = gconf(scanner1.Text(), "repo") + pkgname + "/"
-		}
-	}
-	fmt.Println(rdir)
-	rcmd := exec.Command("mkdir", "-p", rdir)
-	rcmd.Stdout = os.Stdout
-	rcmd.Stderr = os.Stderr
-	if err := rcmd.Run(); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(gconf_file)
-	file, err := os.Open(gconf_file)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err = file.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-
-		if gconf(scanner.Text(), "build") != "" {
-			fmt.Println("package found")
-
-			f, err := os.Create(rdir + "build")
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			l, err := f.WriteString(gconf(scanner.Text(), "build"))
-			if err != nil {
-
-				f.Close()
-				return
-			}
-			l = l
-		}
-		if gconf(scanner.Text(), "url") != "" {
-
-			f, err := os.Create(rdir + "url")
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			l, err := f.WriteString(gconf(scanner.Text(), "url"))
-			if err != nil {
-
-				f.Close()
-				return
-			}
-			l = l
-		}
-	}
-	build(pkgname)
-}
-
 func arguments() {
 
 	if os.Args[1] == "help" || os.Args[1] == "h" {
@@ -301,7 +204,7 @@ func arguments() {
 
 			if os.Args[1] == "build" || os.Args[1] == "b" {
 
-				create(arg)
+				build(arg)
 
 			}
 		}
