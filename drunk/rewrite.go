@@ -38,6 +38,16 @@ func main() {
 	os.Exit(0)
 }
 
+func addToList(pkg, list string) {
+	file, err := os.OpenFile(list, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	if _, err := file.WriteString(pkg + "\n"); err != nil {
+		log.Fatal(err)
+	}
+}
 func gconf(gconfs string, keyword string) string {
 
 	for _, line := range strings.Split(strings.TrimRight(gconfs, "\n"), "\n") {
@@ -90,6 +100,13 @@ func build(pkg string) {
 			repo = gconf(string(line), "repoPath")
 		}
 	}
+	pkgList := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "pkgList") != "" {
+			pkgList = gconf(string(line), "pkgList")
+		}
+	}
+	addToList(pkg, pkgList)
 	repoUrl := ""
 	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
 		if gconf(string(line), "repo") != "" {
