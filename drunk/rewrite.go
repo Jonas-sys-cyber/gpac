@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/user"
 	"strings"
 )
@@ -103,18 +104,54 @@ func build(pkg string) {
 	}
 	// create tmp dir
 	os.MkdirAll(tmpDir, os.ModePerm)
-	// get gconf file
-	fmt.Println(tmpDir + pkg + ".tar.gz")
+	// get gconf file for the build script
+	gconfFile := repo + pkg + ".gconf"
+	// fmt.Println(gconfFile)
+	data, err = ioutil.ReadFile(gconfFile)
+	if err != nil {
+		fmt.Println("File reading error. Please don´t try it again", err)
+		return
+	}
+	buildCommand := ""
+	var gconfText string = string(data)
+	for _, line := range strings.Split(strings.TrimRight(gconfText, "\n"), "\n") {
+		if gconf(string(line), "build") != "" {
+			buildCommand = gconf(string(line), "build")
+		}
+	}
+	// write the build script
+	f, err := os.Create(tmpDir + "build")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	//fmt.Println(buildCommand)
+	_, err2 := f.WriteString(buildCommand)
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	// fmt.Println("done")
+	// fmt.Println(gconfFile)
+	// fmt.Println(tmpDir + pkg + ".tar.gz")
 	pkgUrl := repoUrl + pkg + ".tar.gz"
 	err = download(tmpDir+pkg+".tar.gz", pkgUrl)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Downloaded tar ball from: " + pkgUrl)
-	fmt.Println(pkgUrl)
-	fmt.Println(repoUrl)
-	fmt.Println(repo)
-	fmt.Println(pkg)
+	//fmt.Println("Downloaded tar ball from: " + pkgUrl)
+	//fmt.Println(pkgUrl)
+	//fmt.Println(repoUrl)
+	//fmt.Println(repo)
+	//fmt.Println(pkg)
+	//fmt.Println(tmpDir + "build")
+	cmd := exec.Command("sh", tmpDir+"build")
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print("package installed")
+
 }
 
 // check if arguments are given
@@ -134,7 +171,6 @@ func isRoot() bool {
 // help
 func help() {
 	fmt.Println("Real programmers don´t need help!")
-
 }
 func arguments() {
 
