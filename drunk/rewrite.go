@@ -72,6 +72,8 @@ func build(pkg string) {
 			repoUrl = gconf(string(line), "repoUrl")
 		}
 	}
+	pkgUrl := repoUrl + pkg + "tar.gz"
+	fmt.Println(pkgUrl)
 	fmt.Println(repoUrl)
 	fmt.Println(repo)
 	fmt.Println(pkg)
