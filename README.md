@@ -104,7 +104,7 @@ _For more examples, please refer to the [Documentation](https://github.com/luis-
 <!-- LICENSE -->
 ## License
 
-Distributed under the GPL License (becausr we loce RMS). See `LICENSE` for more information.
+Distributed under the GPL v3 License (becausr we loce RMS). See `LICENSE` for more information.
 
 
 
