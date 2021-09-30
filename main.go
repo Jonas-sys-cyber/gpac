@@ -162,6 +162,12 @@ func build(pkg string) {
 		}
 	}
 
+	pkgMsg := ""
+	for _, line := range strings.Split(strings.TrimRight(gconfText, "\n"), "\n") {
+		if gconf(string(line), "msg") != "" {
+			pkgMsg = gconf(string(line), "msg")
+		}
+	}
 	// write the build script
 	buildCommand = "cd " + tmpDir + "; " + "tar --extract -f " + pkgName + ".tar.gz" + ";" + "cd " + pkgName + ";" + buildCommand
 	fmt.Println(buildCommand)
@@ -201,6 +207,11 @@ func build(pkg string) {
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
+	}
+	if pkgMsg != "" {
+		fmt.Println("pkgMsg:" + pkgMsg)
+	} else {
+		fmt.Println("no pkgMsg was provided")
 	}
 	fmt.Print("package installed")
 	//adding package to the package list

@@ -1,1 +1,2 @@
 :build[sh INSTALL; mkdir -p /plan9/bin; cp -rf bin /plan9/bin]
+:msg[put /plan9/bin in your path and put the plan9 value in your path]
