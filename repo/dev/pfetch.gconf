@@ -1,2 +1,0 @@
-:url[https://github.com/luis-07/tar-balls/releases/download/v0.1/pfetch.tar.gz]
-:build[cd /tmp/pfetch; tar --extract -f pfetch.tar.gz; cd pfetch; make install]

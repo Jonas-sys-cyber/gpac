@@ -106,11 +106,13 @@ func build(pkg string) {
 	if strings.Contains(pkg, "/") {
 
 		trimmed := strings.Split(pkg, "/")
-		fmt.Println(trimmed[0])
+		//fmt.Println(trimmed[0])
 		for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
 			if gconf(string(line), trimmed[0]) != "" {
 				repoUrl = gconf(string(line), trimmed[0])
 				pkgName = trimmed[1]
+
+				fmt.Println("using 3rd party reop: " + repoUrl)
 			}
 		}
 	} else {
@@ -120,7 +122,7 @@ func build(pkg string) {
 				repoUrl = gconf(string(line), "repoUrl")
 			}
 		}
-		fmt.Println("using reop:" + repoUrl)
+		fmt.Println("using reop: " + repoUrl)
 	}
 
 	pkgList := ""
@@ -129,12 +131,11 @@ func build(pkg string) {
 			pkgList = gconf(string(line), "pkgList")
 		}
 	}
-	addToList(pkg, pkgList)
 
 	tmpDir := ""
 	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
 		if gconf(string(line), "tmpDir") != "" {
-			tmpDir = gconf(string(line), "tmpDir") + pkg + "/"
+			tmpDir = gconf(string(line), "tmpDir") + pkgName + "/"
 		}
 	}
 	// create tmp dir
@@ -155,6 +156,8 @@ func build(pkg string) {
 		}
 	}
 	// write the build script
+	buildCommand = "cd " + tmpDir + "; " + "tar --extract -f " + pkgName + ".tar.gz" + ";" + "cd " + pkgName + ";" + buildCommand
+	fmt.Println(buildCommand)
 	f, err := os.Create(tmpDir + "build")
 	if err != nil {
 		log.Fatal(err)
@@ -168,8 +171,8 @@ func build(pkg string) {
 
 	// fmt.Println("done")
 	// fmt.Println(gconfFile)
-	fmt.Println(tmpDir + pkg + ".tar.gz")
-	pkgUrl := repoUrl + pkg + ".tar.gz"
+	fmt.Println(tmpDir + pkgName + ".tar.gz")
+	pkgUrl := repoUrl + pkgName + ".tar.gz"
 
 	err = download(tmpDir+pkgName+".tar.gz", pkgUrl)
 	if err != nil {
@@ -180,13 +183,16 @@ func build(pkg string) {
 	//fmt.Println(repoUrl)
 	//fmt.Println(repo)
 	//fmt.Println(pkg)
-	//fmt.Println(tmpDir + "build")
+	fmt.Println(tmpDir + "build")
+
 	cmd := exec.Command("sh", tmpDir+"build")
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Print("package installed")
+	//adding package to the package list
+	addToList(pkg, pkgList)
 
 }
 
