@@ -138,6 +138,12 @@ func build(pkg string) {
 			tmpDir = gconf(string(line), "tmpDir") + pkgName + "/"
 		}
 	}
+	buildOutput := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "buildOutput") != "" {
+			buildOutput = gconf(string(line), "buildOutput")
+		}
+	}
 	// create tmp dir
 	os.MkdirAll(tmpDir, os.ModePerm)
 	// get gconf file for the build script
@@ -155,6 +161,7 @@ func build(pkg string) {
 			buildCommand = gconf(string(line), "build")
 		}
 	}
+
 	// write the build script
 	buildCommand = "cd " + tmpDir + "; " + "tar --extract -f " + pkgName + ".tar.gz" + ";" + "cd " + pkgName + ";" + buildCommand
 	fmt.Println(buildCommand)
@@ -183,9 +190,14 @@ func build(pkg string) {
 	//fmt.Println(repoUrl)
 	//fmt.Println(repo)
 	//fmt.Println(pkg)
-	fmt.Println(tmpDir + "build")
+	fmt.Println("running build script this can take a while")
 
 	cmd := exec.Command("sh", tmpDir+"build")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	if buildOutput == "1" {
+		cmd.Stdout = os.Stdout
+	}
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)

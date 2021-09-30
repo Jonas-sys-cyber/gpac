@@ -1,0 +1,1 @@
+:build[sh INSTALL; mkdir -p /plan9/bin; cp -rf bin /plan9/bin]
