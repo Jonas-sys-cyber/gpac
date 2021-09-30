@@ -88,6 +88,7 @@ func download(filepath string, url string) error {
 // build function
 func build(pkg string) {
 	// get repo
+	pkgName := pkg
 	data, err := ioutil.ReadFile("/etc/gpac.gconf")
 	if err != nil {
 		fmt.Println("File reading error. Please don´t try it again", err)
@@ -109,6 +110,7 @@ func build(pkg string) {
 		for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
 			if gconf(string(line), trimmed[0]) != "" {
 				repoUrl = gconf(string(line), trimmed[0])
+				pkgName = trimmed[1]
 			}
 		}
 	} else {
@@ -166,9 +168,10 @@ func build(pkg string) {
 
 	// fmt.Println("done")
 	// fmt.Println(gconfFile)
-	// fmt.Println(tmpDir + pkg + ".tar.gz")
+	fmt.Println(tmpDir + pkg + ".tar.gz")
 	pkgUrl := repoUrl + pkg + ".tar.gz"
-	err = download(tmpDir+pkg+".tar.gz", pkgUrl)
+
+	err = download(tmpDir+pkgName+".tar.gz", pkgUrl)
 	if err != nil {
 		panic(err)
 	}
