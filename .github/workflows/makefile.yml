@@ -15,10 +15,10 @@ jobs:
     - uses: actions/checkout@v2
       
     - name: Make b
-      run: make b
+      run: sudo make b
       
     - name: Run 
-      run: make run
+      run: sudo make run
 
     - name: check
-      run: make check
+      run: sudo make check
