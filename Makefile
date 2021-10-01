@@ -17,7 +17,7 @@ runPfetch:
 	/usr/bin/gpac b legacy/pfetch
 
 checkPfetch:
-	rm /usr/bin/pfetch
+	pfetch
 
 checkNeofetch:
-	rm /usr/bin/neofetch
+	neofetch
