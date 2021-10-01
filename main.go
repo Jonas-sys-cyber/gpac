@@ -250,7 +250,7 @@ func arguments() {
 
 		} else {
 
-			if os.Args[1] == "build" || os.Args[1] == "b" {
+			if os.Args[1] == "build" || os.Args[1] == "b" || os.Args[1] == "install" {
 
 				build(arg)
 
