@@ -123,14 +123,33 @@ func src(pkg string) {
 			srcDir = gconf(string(line), "srcDir")
 		}
 	}
+	buildOutput := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "buildOutput") != "" {
+			buildOutput = gconf(string(line), "buildOutput")
+		}
+	}
 	pkgUrl := repoUrl + pkgName + ".tar.gz"
-	fmt.Println("Downloading Source Code")
+	fmt.Println("Downloading Source Code...")
 	err = download(srcDir+pkgName+".tar.gz", pkgUrl)
 	if err != nil {
 		panic(err)
 	}
 	os.MkdirAll(srcDir, os.ModePerm)
-	fmt.Println("Source code downloaded")
+	fmt.Println("Source Code downloaded")
+	fmt.Println("extracting thr Source Code...")
+	cmd := exec.Command("tar", "--extracr", "-f", srcDir+pkgName+"tar.gz")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	if buildOutput == "1" {
+		cmd.Stdout = os.Stdout
+	}
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Souce Code extracted")
 }
 
 // build function
