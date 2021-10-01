@@ -23,8 +23,16 @@ const (
 func errorPrint(msg string, exitCode int) {
 	fmt.Println(ErrorColor, msg, ColorReset)
 	os.Exit(exitCode)
-
 }
+
+func Print(msg string) {
+	fmt.Println(SuccessColor, "✓", ColorReset, msg)
+}
+
+func Printl(msg string) {
+	fmt.Println(InfoColor, "⌛", ColorReset, msg)
+}
+
 func main() {
 	if _, err := os.Stat("/etc/gpac.gconf"); os.IsNotExist(err) {
 		errorPrint("Error: /etc/gpac.gconf not found. Just install the shit right, man!", 127)
@@ -130,14 +138,14 @@ func src(pkg string) {
 		}
 	}
 	pkgUrl := repoUrl + pkgName + ".tar.gz"
-	fmt.Println("Downloading Source Code...")
+	Printl("Downloading Source Code...")
 	err = download(srcDir+pkgName+".tar.gz", pkgUrl)
 	if err != nil {
 		panic(err)
 	}
 	os.MkdirAll(srcDir, os.ModePerm)
-	fmt.Println("Source Code downloaded")
-	fmt.Println("extracting thr Source Code...")
+	Print("Source Code downloaded")
+	Printl("extracting Source Code...")
 	cmd := exec.Command("tar", "--extracr", "-f", srcDir+pkgName+"tar.gz")
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -149,7 +157,7 @@ func src(pkg string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Souce Code extracted")
+	Print("Souce Code extracted")
 }
 
 // build function
@@ -258,12 +266,12 @@ func build(pkg string) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Downloaded tar ball from: " + pkgUrl)
+	Print("Downloaded tar ball from: " + pkgUrl)
 	//fmt.Println(pkgUrl)
 	//fmt.Println(repoUrl)
 	//fmt.Println(repo)
 	//fmt.Println(pkg)
-	fmt.Println("running build script this can take a while")
+	Printl("running build script this can take a while")
 
 	cmd := exec.Command("sh", tmpDir+"build")
 	cmd.Stderr = os.Stderr
@@ -280,7 +288,7 @@ func build(pkg string) {
 	} else {
 		fmt.Println("no pkgMsg was provided")
 	}
-	fmt.Print("package installed")
+	Print("package installed")
 	//adding package to the package list
 	addToList(pkg, pkgList)
 
