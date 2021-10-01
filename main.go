@@ -85,6 +85,54 @@ func download(filepath string, url string) error {
 	return err
 }
 
+func src(pkg string) {
+	pkgName := pkg
+	data, err := ioutil.ReadFile("/etc/gpac.gconf")
+	if err != nil {
+		fmt.Println("File reading error. Please don´t try it again", err)
+		return
+	}
+	var gpacGConfText string = string(data)
+
+	repoUrl := ""
+	if strings.Contains(pkg, "/") {
+
+		trimmed := strings.Split(pkg, "/")
+		//fmt.Println(trimmed[0])
+		for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+			if gconf(string(line), trimmed[0]) != "" {
+				repoUrl = gconf(string(line), trimmed[0])
+				pkgName = trimmed[1]
+
+				fmt.Println("using 3rd party reop: " + repoUrl)
+			}
+		}
+	} else {
+
+		for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+			if gconf(string(line), "repoUrl") != "" {
+				repoUrl = gconf(string(line), "repoUrl")
+			}
+		}
+		fmt.Println("using reop: " + repoUrl)
+
+	}
+	srcDir := ""
+	for _, line := range strings.Split(strings.TrimRight(gpacGConfText, "\n"), "\n") {
+		if gconf(string(line), "srcDir") != "" {
+			srcDir = gconf(string(line), "srcDir")
+		}
+	}
+	pkgUrl := repoUrl + pkgName + ".tar.gz"
+	fmt.Println("Downloading Source Code")
+	err = download(srcDir+pkgName+".tar.gz", pkgUrl)
+	if err != nil {
+		panic(err)
+	}
+	os.MkdirAll(srcDir, os.ModePerm)
+	fmt.Println("Source code downloaded")
+}
+
 // build function
 func build(pkg string) {
 	// get repo
@@ -184,14 +232,14 @@ func build(pkg string) {
 
 	// fmt.Println("done")
 	// fmt.Println(gconfFile)
-	fmt.Println(tmpDir + pkgName + ".tar.gz")
+	//fmt.Println(tmpDir + pkgName + ".tar.gz")
 	pkgUrl := repoUrl + pkgName + ".tar.gz"
 
 	err = download(tmpDir+pkgName+".tar.gz", pkgUrl)
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("Downloaded tar ball from: " + pkgUrl)
+	fmt.Println("Downloaded tar ball from: " + pkgUrl)
 	//fmt.Println(pkgUrl)
 	//fmt.Println(repoUrl)
 	//fmt.Println(repo)
@@ -209,7 +257,7 @@ func build(pkg string) {
 		log.Fatal(err)
 	}
 	if pkgMsg != "" {
-		fmt.Println("pkgMsg:" + pkgMsg)
+		fmt.Println("pkgMsg: " + pkgMsg)
 	} else {
 		fmt.Println("no pkgMsg was provided")
 	}
@@ -250,10 +298,12 @@ func arguments() {
 
 		} else {
 
-			if os.Args[1] == "build" || os.Args[1] == "b" {
+			if os.Args[1] == "build" || os.Args[1] == "b" || os.Args[1] == "install" {
 
 				build(arg)
 
+			} else if os.Args[1] == "source" || os.Args[1] == "src" {
+				src(arg)
 			}
 		}
 	}

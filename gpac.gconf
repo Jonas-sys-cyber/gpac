@@ -2,6 +2,7 @@
 :repoUrl[https://github.com/luis-07/gpac/releases/download/v0.1/]
 :legacy[https://github.com/luis-07/tar-balls/releases/download/v0.1/]
 :pkgList[/var/db/gpac/pkgList]
+:srcDir[/src/]
 :buildOutput[1]
 :tmpDir[/tmp/]
 :IacceptTheLicenceAgreementForComments⑨ This is a comment:
