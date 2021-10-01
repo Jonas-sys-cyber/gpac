@@ -64,7 +64,7 @@ jobs:
     #    uses a compiled language
 
     - run: |
-       make b
+       sudo make b
     #   sudo make release
 
     - name: Perform CodeQL Analysis
