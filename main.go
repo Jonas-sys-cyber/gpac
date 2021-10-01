@@ -273,8 +273,7 @@ func build(pkg string) {
 	//fmt.Println(pkg)
 	Printl("running build script this can take a while")
 
-	cmd := exec.Command("sh", tmpDir+"buil") // this breaks gpac use build instead of buil
-	// i need it for tests
+	cmd := exec.Command("sh", tmpDir+"build")
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	if buildOutput == "1" {
