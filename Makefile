@@ -7,3 +7,10 @@ b:
 	cp -rf repo /var/db/gpac/
 	touch /var/db/gpac/pkgList
 install: b
+
+run:
+	rm -f /usr/bin/neofetch
+	/usr/bin/gpac b neofetch
+
+check:
+	rm /usr/bin/neofetch
