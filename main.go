@@ -245,7 +245,7 @@ func build(pkg string) {
 	}
 	// write the build script
 	buildCommand = "cd " + tmpDir + "; " + "tar --extract -f " + pkgName + ".tar.gz" + ";" + "cd " + pkgName + ";" + buildCommand
-	fmt.Println(buildCommand)
+	// fmt.Println(buildCommand)
 	f, err := os.Create(tmpDir + "build")
 	if err != nil {
 		log.Fatal(err)
