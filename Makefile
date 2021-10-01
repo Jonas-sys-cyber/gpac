@@ -8,9 +8,16 @@ b:
 	touch /var/db/gpac/pkgList
 install: b
 
-run:
+runNeofetch:
 	rm -f /usr/bin/neofetch
 	/usr/bin/gpac b neofetch
 
-check:
+runPfetch:
+	rm -f /usr/bin/pfetch
+	/usr/bin/gpac b legacy/pfetch
+
+checkPfetch:
+	rm /usr/bin/pfetch
+
+checkNeofetch:
 	rm /usr/bin/neofetch

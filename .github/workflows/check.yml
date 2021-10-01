@@ -1,0 +1,30 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+permissions: write-all
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+ 
+    - name: Make b
+      run: sudo make b
+      
+    - name: Install neofetch (1st party)
+      run: sudo make runNeofetch
+
+    - name: Check neofetch (1st party)
+      run: sudo make checkNeofetch
+    
+    - name: Install pfetch (3rd party)
+      run: sudo make runPfetch
+
+    - name: Check pfetch (3rd party)
+      run: sudo make checkPfetch
