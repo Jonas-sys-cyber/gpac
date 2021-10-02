@@ -85,7 +85,9 @@ To install noefetch just run as root:
 ```
 gpac b neofetch
 ```
-_For more examples, please refer to the [Documentation](https://github.com/luis-07/gpac/wiki)_
+_For more examples, please refer to the [Documentation](https://github.com/luis-07/gpac/wiki)_```
+gpac b negacy/pfetch
+```
 
 
 
