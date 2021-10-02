@@ -34,6 +34,7 @@ func Printl(msg string) {
 }
 
 func main() {
+	isRoot()
 	if _, err := os.Stat("/etc/gpac.gconf"); os.IsNotExist(err) {
 		errorPrint("Error: /etc/gpac.gconf not found. Just install the shit right, man!", 127)
 	}
@@ -324,7 +325,9 @@ func arguments() {
 		if i == 0 || i == 1 {
 
 		} else {
-
+			if !isRoot() {
+				errorPrint("Hey bitch! Run me as root!", 1)
+			}
 			if os.Args[1] == "build" || os.Args[1] == "b" || os.Args[1] == "install" {
 
 				build(arg)

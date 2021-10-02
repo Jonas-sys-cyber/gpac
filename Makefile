@@ -6,6 +6,7 @@ b:
 	mkdir -p /var/db/gpac/repo
 	cp -rf repo /var/db/gpac/
 	touch /var/db/gpac/pkgList
+
 install: b
 
 runNeofetch:
